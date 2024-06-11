@@ -1,0 +1,284 @@
+import {NextResponse} from 'next/server';
+const pdf = require('pdf-poppler');
+import fs from 'fs';
+const path = require('path');
+import Tesseract, { OEM } from 'tesseract.js';
+import {franc} from 'franc'
+
+function splitTextIntoChunks(text, chunkSize = 150){
+  const chunks = [];
+  let startIndex= 0;
+
+  while(startIndex < text.length){
+    let endIndex = Math.min(startIndex + chunkSize, text.length);
+
+    if(endIndex<text.length){
+      endIndex = text.lastIndexOf(' ', endIndex);
+    }
+
+    chunks.push(text.substring(startIndex, endIndex));
+    startIndex = endIndex+1;
+
+  }
+  return chunks;
+}
+
+const iso6393To1 = {
+  aar: 'aa',
+  abk: 'ab',
+  afr: 'af',
+  aka: 'ak',
+  amh: 'am',
+  ara: 'ar',
+  arg: 'an',
+  asm: 'as',
+  ava: 'av',
+  ave: 'ae',
+  aym: 'ay',
+  aze: 'az',
+  bak: 'ba',
+  bam: 'bm',
+  bel: 'be',
+  ben: 'bn',
+  bis: 'bi',
+  bod: 'bo',
+  bos: 'bs',
+  bre: 'br',
+  bul: 'bg',
+  cat: 'ca',
+  ces: 'cs',
+  cha: 'ch',
+  che: 'ce',
+  chu: 'cu',
+  chv: 'cv',
+  cor: 'kw',
+  cos: 'co',
+  cre: 'cr',
+  cym: 'cy',
+  dan: 'da',
+  deu: 'de',
+  div: 'dv',
+  dzo: 'dz',
+  ell: 'el',
+  eng: 'en',
+  epo: 'eo',
+  est: 'et',
+  eus: 'eu',
+  ewe: 'ee',
+  fao: 'fo',
+  fas: 'fa',
+  fij: 'fj',
+  fin: 'fi',
+  fra: 'fr',
+  fry: 'fy',
+  ful: 'ff',
+  gla: 'gd',
+  gle: 'ga',
+  glg: 'gl',
+  glv: 'gv',
+  grn: 'gn',
+  guj: 'gu',
+  hat: 'ht',
+  hau: 'ha',
+  hbs: 'sh',
+  heb: 'he',
+  her: 'hz',
+  hin: 'hi',
+  hmo: 'ho',
+  hrv: 'hr',
+  hun: 'hu',
+  hye: 'hy',
+  ibo: 'ig',
+  ido: 'io',
+  iii: 'ii',
+  iku: 'iu',
+  ile: 'ie',
+  ina: 'ia',
+  ind: 'id',
+  ipk: 'ik',
+  isl: 'is',
+  ita: 'it',
+  jav: 'jv',
+  jpn: 'ja',
+  kal: 'kl',
+  kan: 'kn',
+  kas: 'ks',
+  kat: 'ka',
+  kau: 'kr',
+  kaz: 'kk',
+  khm: 'km',
+  kik: 'ki',
+  kin: 'rw',
+  kir: 'ky',
+  kom: 'kv',
+  kon: 'kg',
+  kor: 'ko',
+  kua: 'kj',
+  kur: 'ku',
+  lao: 'lo',
+  lat: 'la',
+  lav: 'lv',
+  lim: 'li',
+  lin: 'ln',
+  lit: 'lt',
+  ltz: 'lb',
+  lub: 'lu',
+  lug: 'lg',
+  mah: 'mh',
+  mal: 'ml',
+  mar: 'mr',
+  mkd: 'mk',
+  mlg: 'mg',
+  mlt: 'mt',
+  mon: 'mn',
+  mri: 'mi',
+  msa: 'ms',
+  mya: 'my',
+  nau: 'na',
+  nav: 'nv',
+  nbl: 'nr',
+  nde: 'nd',
+  ndo: 'ng',
+  nep: 'ne',
+  nld: 'nl',
+  nno: 'nn',
+  nob: 'nb',
+  nor: 'no',
+  nya: 'ny',
+  oci: 'oc',
+  oji: 'oj',
+  ori: 'or',
+  orm: 'om',
+  oss: 'os',
+  pan: 'pa',
+  pli: 'pi',
+  pol: 'pl',
+  por: 'pt',
+  pus: 'ps',
+  que: 'qu',
+  roh: 'rm',
+  ron: 'ro',
+  run: 'rn',
+  rus: 'ru',
+  sag: 'sg',
+  san: 'sa',
+  sin: 'si',
+  slk: 'sk',
+  slv: 'sl',
+  sme: 'se',
+  smo: 'sm',
+  sna: 'sn',
+  snd: 'sd',
+  som: 'so',
+  sot: 'st',
+  spa: 'es',
+  sqi: 'sq',
+  srd: 'sc',
+  srp: 'sr',
+  ssw: 'ss',
+  sun: 'su',
+  swa: 'sw',
+  swe: 'sv',
+  tah: 'ty',
+  tam: 'ta',
+  tat: 'tt',
+  tel: 'te',
+  tgk: 'tg',
+  tgl: 'tl',
+  tha: 'th',
+  tir: 'ti',
+  ton: 'to',
+  tsn: 'tn',
+  tso: 'ts',
+  tuk: 'tk',
+  tur: 'tr',
+  twi: 'tw',
+  uig: 'ug',
+  ukr: 'uk',
+  urd: 'ur',
+  uzb: 'uz',
+  ven: 've',
+  vie: 'vi',
+  vol: 'vo',
+  wln: 'wa',
+  wol: 'wo',
+  xho: 'xh',
+  yid: 'yi',
+  yor: 'yo',
+  zha: 'za',
+  zho: 'zh',
+  zul: 'zu'
+}
+export async function POST(req, res) {
+    try {
+      const formData = await req.formData();
+      const file = formData.get('file');
+      
+      if (!file) {
+        return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+      }
+      console.log(process.cwd());
+      const tempDir = path.join(process.cwd(), 'tmp');
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir);
+      }
+     
+      const tempFilePath = path.join(tempDir, file.name);
+     
+      const arrayBuffer = await file.arrayBuffer();
+      fs.writeFileSync(tempFilePath, Buffer.from(arrayBuffer));
+     
+      const outputDir = path.join(tempDir, 'output');
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir);
+      }
+      
+      let opts = {
+        density:300,
+        depth:8,
+        format: 'jpeg',
+        out_dir: outputDir,
+        out_prefix: path.basename(tempFilePath, path.extname(tempFilePath)),
+        page: null,
+       
+      }
+      await pdf.convert(tempFilePath, opts);
+      console.log('Successfully converted');
+  
+      let fullText = '';
+      const imageFiles = fs.readdirSync(outputDir).filter((file) => file.endsWith('.jpg'));
+      console.log('Image files:', imageFiles);
+      let data = 'some value'; // Now 'data' is defined and can be used
+ 
+      for (const imageFile of imageFiles) {
+        const imagePath = path.join(outputDir, imageFile);
+        console.log('Processing image:', imagePath);
+        console.time('Text generation'); // Start timer 
+        //I want to mention OEM
+
+        const { data : {text}} = await Tesseract.recognize(imagePath);
+        console.timeEnd('Text generation'); // End timer and print elapsed time
+        console.log('Data:', text);
+        fullText += text;
+        fs.unlinkSync(imagePath);
+        
+      }
+      
+      fs.rmdirSync(outputDir, { recursive: true });
+      fs.unlinkSync(tempFilePath); // Remove the temp file after processing
+      fs.rmdirSync(tempDir, { recursive: true }); // Remove the temp directory after processing
+      
+      const textChunks = splitTextIntoChunks(fullText);
+
+      const language = franc(fullText);
+      const iso6391Language = iso6393To1[language];
+
+      return NextResponse.json({ texts: textChunks , language:iso6391Language});
+
+    } catch (error) {
+      
+      console.error('Error processing the PDF:', error);
+      return NextResponse.json({ error: 'Processing error' }, { status: 500 });
+    
+    }
+}
