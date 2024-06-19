@@ -150,7 +150,7 @@ export default function Home() {
       setIsAudioAvailable(true);
     }
     setAllAudioChunksGenerated(true);
-  }, [initialLang, ocrtextChunks, isPlaying]);
+  }, [initialLang, ocrtextChunks]);
 
   useEffect(() => {
     if (TtoLanguage) {
@@ -162,7 +162,7 @@ export default function Home() {
       setCurrentPlaybackPosition(0);
       setPlaybackSpeed(1);
     }
-  },[TtoLanguage]);
+  },[TtoLanguage, isPlaying, pauseAudio]);
 
   const handleLanguageChange = (event) => {
     const selectedLanguage = event.target.value;
@@ -197,14 +197,14 @@ export default function Home() {
     }
   }
 
-  const pauseAudio = async () => {
+  const pauseAudio = useCallback(async () => {
     if (isAudioAvailable && audioChunks[currentChunkIndex]) {
       audioChunks[currentChunkIndex].pause();
       setCurrentPlaybackPosition(audioChunks[currentChunkIndex].currentTime);
       setIsPlaying(false);
       animationVideoRef.current.pause();
     }
-  }
+  }, [audioChunks, currentChunkIndex, isAudioAvailable]);
 
   const toggleAudioPlayback=()=>{
     if(isPlaying){
