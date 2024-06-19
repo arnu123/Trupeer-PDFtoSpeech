@@ -21,6 +21,7 @@ export default function Home() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1); // New state for playback speed
   const [isLoading1, setIsLoading1] = useState(false); // New state for loading ocr text
   const animationVideoRef = useRef(null); // Ref for the animation video
+  const generationIdRef = useRef(0); // New state for generation ID
 
   const handleFileUpload = async (event) => {
     event.preventDefault();
@@ -28,7 +29,7 @@ export default function Home() {
     
     const displayFile = event.target.files ? URL.createObjectURL(event.target.files[0]) : null;
     setPdfFile(displayFile);
-    
+    setCurrentChunkIndex(0);
     const file = event.target.files ? event.target.files[0] : null;
     if (!file) return;    
 
@@ -63,11 +64,10 @@ export default function Home() {
           })
         });
         const response = await res.json();
-        setIsLoading1(false); 
+        setIsLoading1(false);
         const targetLanguages = response.targetLangs;
         setTargetLangs(targetLanguages);
         setIsOCRTextAvailable(true);
-        
       } catch(error){
         console.error('There was a problem with fetching target languages:', error);
       }
@@ -82,6 +82,9 @@ export default function Home() {
   }
 
   const handleGetOutput=()=>{
+    if(isPlaying){
+      pauseAudio();
+    }
     if (!isTranslationEnabled) {
       // If translation is not required, use the language of the PDF
       setIsAudioAvailable(false);
@@ -107,6 +110,10 @@ export default function Home() {
   const fetchLanguageConfig = useCallback(async (selectedLanguage) => {
     const audioChunksTemp = [];
     const translatedChunksTemp = [];
+
+    generationIdRef.current += 1;
+    const currentGenerationId = generationIdRef.current;
+
     const res = await fetch('/api/bhashiniConfig', {
         method:'POST',
         headers:{
@@ -122,6 +129,7 @@ export default function Home() {
     const bhashiniConfigResponse = await res.json();
 
     for (const chunk of ocrtextChunks){
+      if (generationIdRef.current !== currentGenerationId) break;
       console.log("Chunk ", chunk);
       const res1 = await fetch('/api/bhashiniCompute',{
           method:'POST',
@@ -135,6 +143,7 @@ export default function Home() {
             ocrtext: chunk
           })
       });
+      if (generationIdRef.current !== currentGenerationId) break;
       const bhashiniComputeResponse = await res1.json();
       audioChunksTemp.push(new Audio(`data:audio/wav;base64,${bhashiniComputeResponse.computeResult}`));
       
@@ -162,7 +171,7 @@ export default function Home() {
       setCurrentPlaybackPosition(0);
       setPlaybackSpeed(1);
     }
-  },[TtoLanguage, isPlaying, pauseAudio]);
+  },[TtoLanguage]);
 
   const handleLanguageChange = (event) => {
     const selectedLanguage = event.target.value;
@@ -197,14 +206,14 @@ export default function Home() {
     }
   }
 
-  const pauseAudio = useCallback(async () => {
+  const pauseAudio = async () => {
     if (isAudioAvailable && audioChunks[currentChunkIndex]) {
       audioChunks[currentChunkIndex].pause();
       setCurrentPlaybackPosition(audioChunks[currentChunkIndex].currentTime);
       setIsPlaying(false);
       animationVideoRef.current.pause();
     }
-  }, [audioChunks, currentChunkIndex, isAudioAvailable]);
+  }
 
   const toggleAudioPlayback=()=>{
     if(isPlaying){
@@ -267,7 +276,7 @@ export default function Home() {
           </div>
          )}</div>
         <button disabled={!isOCRTextAvailable} onClick={handleGetOutput} className="mt-4 px-4 py-2 border-2 border-gray-300 rounded-md bg-gradient-to-r from-[#430F39] via-[#E68CDC] to-[#F0B7EA] text-white hover:bg-gray-200">
-         {isLoading1 ? "LOADING... please wait" : "Get Output"}
+        {isLoading1 ? "LOADING... please wait" : "Get Output"}
         </button>
       </div>
       <div className="flex flex-col items-center justify-center m-4 p-6 border-2 border-gray-300 rounded-lg bg-[#BEBBBB] shadow-xl">

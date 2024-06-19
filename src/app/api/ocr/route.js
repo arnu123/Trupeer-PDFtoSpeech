@@ -236,7 +236,7 @@ export async function POST(req, res) {
       console.log('Processing image:', imagePath);
       console.time('Text generation'); // Start timer 
 
-      const { data : {text}} = await Tesseract.recognize(imagePath, 'eng+hin' );
+      const { data : {text}} = await Tesseract.recognize(imagePath, 'eng+hin+pan' );
       console.timeEnd('Text generation'); // End timer and print elapsed time
       fullText += text;
       fs.unlinkSync(imagePath);
