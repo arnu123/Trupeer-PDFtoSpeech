@@ -2,8 +2,8 @@ import {NextResponse} from 'next/server';
 
 export async function POST(req, res) {
     const { initialLang, selectedLanguage } = await req.json(); 
-    console.log(initialLang, selectedLanguage);
-    if(selectedLanguage!=='en'){
+    
+    if(selectedLanguage!==initialLang){
         try{
             const res = await fetch('https://meity-auth.ulcacontrib.org/ulca/apis/v0/model/getModelsPipeline', {
                 method: "POST",
@@ -26,11 +26,12 @@ export async function POST(req, res) {
                 'ulcaApiKey': process.env.NEXT_PUBLIC_ulcaApiKey
                 }
             });
-            console.log("Got response from bhashiniConfig side")
+            console.log("Response generated");
             if (!res.ok) {
-                return NextResponse.json({ success: false, message: 'Failed to get config for translation+tts' });
+                return NextResponse.json({ success: false, message: 'Failed Translation + TTS Response' });
             }
             const result = await res.json();
+            
             let ttsServiceId;
             let callbackUrl;
             let translationServiceId;
@@ -40,7 +41,6 @@ export async function POST(req, res) {
                     for (const config of item.config) {
                         if (config.language.sourceLanguage === initialLang && config.language.targetLanguage === selectedLanguage) {
                             translationServiceId = config.serviceId;
-                            console.log("translationServiceId", translationServiceId)
                             break;
                         }
                     }
@@ -52,22 +52,18 @@ export async function POST(req, res) {
                     for (const config of item.config) {
                         if (config.language.sourceLanguage === selectedLanguage) {
                             ttsServiceId = config.serviceId;
-                            console.log("ttsServiceId", ttsServiceId)
                             break;
                         }
                     }
                 }
             }
             callbackUrl = result.pipelineInferenceAPIEndPoint.callbackUrl;
-            console.log("callbackUrl", callbackUrl)
-            // let inferenceApiKeyName = result.pipelineInferenceAPIEndPoint.inferenceApiKey.name;
             let inferenceApiKeyValue = result.pipelineInferenceAPIEndPoint.inferenceApiKey.value;
         
-
             return NextResponse.json({ success: true, config: { translationServiceId, ttsServiceId, callbackUrl, inferenceApiKeyValue }});
         }catch(e){
             console.log(e)
-            return NextResponse.json({ success: false, message: 'Failed to get config for translation+tts' });
+            return NextResponse.json({ success: false, message: 'Failed to get Response' });
         }
     }else{
         try{
@@ -89,9 +85,9 @@ export async function POST(req, res) {
                 'ulcaApiKey': process.env.NEXT_PUBLIC_ulcaApiKey
                 }
             });
-            console.log(res)
+            console.log("Response generated");
             if (!res.ok) {
-                return NextResponse.json({ success: false, message: 'Failed to get config for tts(only)' });
+                return NextResponse.json({ success: false, message: 'Failed to get config for TTS(only)' });
             }
             const result = await res.json();
     
@@ -103,21 +99,18 @@ export async function POST(req, res) {
                     for (const config of item.config) {
                         if (config.language.sourceLanguage === selectedLanguage) {
                             ttsServiceId = config.serviceId;
-                            console.log("ttsServiceId", ttsServiceId)
                             break;
                         }
                     }
                 }
             }
             callbackUrl = result.pipelineInferenceAPIEndPoint.callbackUrl;
-            console.log("callbackUrl", callbackUrl)
-            // let inferenceApiKeyName = result.pipelineInferenceAPIEndPoint.inferenceApiKey.name;
             let inferenceApiKeyValue = result.pipelineInferenceAPIEndPoint.inferenceApiKey.value;
     
             return NextResponse.json({ success: true, config: { ttsServiceId, callbackUrl, inferenceApiKeyValue }});
         }catch (e){
             console.log(e)
-            return NextResponse.json({ success: false, message: 'Failed to get config for tts(only)' });
+            return NextResponse.json({ success: false, message: 'Failed to get config for TTS(only)' });
         }
     }
 }

@@ -5,3 +5,7 @@
 .highlighted {
     background-color: yellow;
 }
+
+.background {
+    @apply flex flex-col md:flex-row items-center justify-center min-h-screen bg-gradient-to-r from-[#430F39] via-[#E68CDC] to-[#FDF6FC] p-6;
+}

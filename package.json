@@ -9,14 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lottiefiles/react-lottie-player": "^3.5.4",
     "encoding": "^0.1.13",
     "franc-min": "^6.2.0",
+    "lottie-web": "^5.12.2",
     "next": "^14.2.3",
     "next-connect": "^1.0.0",
     "node-poppler": "^7.2.0",
     "pdf-poppler": "^0.2.1",
     "react": "^18",
     "react-dom": "^18",
+    "react-lottie": "^1.2.4",
     "tesseract.js": "^5.0.0"
   },
   "devDependencies": {
