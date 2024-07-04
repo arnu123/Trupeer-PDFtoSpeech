@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import SideNavWrapper from '../components/side-nav'
+import Header from '../components/header'
+import MarginWidthWrapper from '../components/margin-width-wrapper'
+import PageWrapper from '../components/page-wrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,7 +20,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={`bg-white${inter.className}`}>
+        <div className="flex">
+          <SideNavWrapper />
+          <main className="flex-1">
+            <MarginWidthWrapper>
+              <Header />
+              <PageWrapper>{children}</PageWrapper>
+            </MarginWidthWrapper>
+          </main>
+        </div>
+      </body>
     </html>
   )
 }

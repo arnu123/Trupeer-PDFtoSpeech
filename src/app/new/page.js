@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from 'next/image';
+import {Bars } from 'react-loader-spinner'
 
 export default function Home() {
   const [pdfFile, setPdfFile] = useState(null);
@@ -22,6 +23,7 @@ export default function Home() {
   const [isLoading1, setIsLoading1] = useState(false); // New state for loading ocr text
   const animationVideoRef = useRef(null); // Ref for the animation video
   const generationIdRef = useRef(0); // New state for generation ID
+  const [spinnerVisible, setSpinnerVisible] = useState(false); // New state for spinner visibility
 
   const handleFileUpload = async (event) => {
     event.preventDefault();
@@ -85,6 +87,8 @@ export default function Home() {
     if(isPlaying){
       pauseAudio();
     }
+    setCurrentChunkIndex(0);
+    setCurrentPlaybackPosition(0);
     if (!isTranslationEnabled) {
       // If translation is not required, use the language of the PDF
       setIsAudioAvailable(false);
@@ -187,7 +191,8 @@ export default function Home() {
           audioChunks[index].currentTime = startTime;
           audioChunks[index].playbackRate = playbackSpeed; 
           audioChunks[index].play();
-          animationVideoRef.current.play();
+          setSpinnerVisible(true);
+          // animationVideoRef.current.play();
           audioChunks[index].onended = () => {
             playNextChunk(index + 1);
           };
@@ -211,7 +216,8 @@ export default function Home() {
       audioChunks[currentChunkIndex].pause();
       setCurrentPlaybackPosition(audioChunks[currentChunkIndex].currentTime);
       setIsPlaying(false);
-      animationVideoRef.current.pause();
+      // animationVideoRef.current.pause();
+      setSpinnerVisible(false);
     }
   }
 
@@ -246,14 +252,14 @@ export default function Home() {
   return (
     <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-white p-6">
       <Image src="/logo.png"  alt="Logo" className="absolute top-0 left-0 m-4 " width = "230" height = "14" />
-      <div className="flex flex-col items-center justify-center m-4 p-6 border-2 border-gray-300 rounded-lg bg-[#BEBBBB] shadow-xl">
+      <div className="flex flex-col items-center justify-center m-4 p-6 border-2 border-gray-300 rounded-lg bg-gray-50 shadow-xl">
         {pdfFile && (
           <div className="w-full h-full">
             <object data={pdfFile} type="application/pdf" width="800px" height="634px" className="rounded-lg shadow-md" />
           </div>
         )}
         <input type="file" onChange={handleFileUpload} className="mb-4 p-2 border-2 border-blue-500 rounded-md focus:ring-2 focus:ring-blue-400" />
-        <div className="bg-gradient-to-r from-[#430F39] via-[#E68CDC] to-[#F0B7EA] p-4 rounded-lg mt-4 shadow-lg">
+        <div className="bg-[#B93fa8] p-4 rounded-lg mt-4 shadow-lg">
         {isLoading1 ? (
           <div className="text-white font-semibold">LOADING... please wait</div>
          ) : (
@@ -275,12 +281,24 @@ export default function Home() {
             </div>
           </div>
          )}</div>
-        <button disabled={!isOCRTextAvailable} onClick={handleGetOutput} className="mt-4 px-4 py-2 border-2 border-gray-300 rounded-md bg-gradient-to-r from-[#430F39] via-[#E68CDC] to-[#F0B7EA] text-white hover:bg-gray-200">
-        {isLoading1 ? "LOADING... please wait" : "Get Output"}
-        </button>
+         
+         {!isLoading1 && 
+        <button disabled={!isOCRTextAvailable} onClick={handleGetOutput} className="mt-4 px-4 py-2 border-2 border-gray-300 rounded-md bg-[#B93fa8] text-white hover:bg-gray-200">
+        Generate Speech
+        </button>}
       </div>
-      <div className="flex flex-col items-center justify-center m-4 p-6 border-2 border-gray-300 rounded-lg bg-[#BEBBBB] shadow-xl">
-        <video ref={animationVideoRef} src="/2.mp4" width="300" height="300" loop className="mb-4 border-4 border-indigo-500 rounded-md shadow-md" />
+      <div className="flex flex-col items-center justify-center m-4 p-6 border-2 border-gray-300 rounded-lg bg-gray-50 shadow-xl">
+        {/* <video ref={animationVideoRef} src="/2.mp4" width="300" height="300" loop className="mb-4 border-4 border-indigo-500 rounded-md shadow-md" /> */}
+        <div className = "p-8"><Bars
+          height="160"
+          width="160"
+          color="#b93fa8"
+          ariaLabel="circles-loading"
+          wrapperStyle={{}}
+          wrapperClass=""
+          visible={spinnerVisible}
+          />
+        </div>
         <div className="flex space-x-4">
           <button onClick={toggleAudioPlayback} disabled={!isAudioAvailable} className={`px-4 py-2 ${isPlaying ? 'bg-yellow-500' : 'bg-green-500'} text-white rounded-full shadow-md hover:${isPlaying ? 'bg-yellow-600' : 'bg-green-600'} transition-transform transform hover:scale-105 disabled:opacity-50`}>
             {isPlaying ? (
@@ -295,10 +313,10 @@ export default function Home() {
               </>
             )}
           </button>
-          <button onClick={speedUpAudio} disabled={!isAudioAvailable} className="px-4 py-2 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-transform transform hover:scale-105 disabled:opacity-50">
+          <button onClick={speedUpAudio} disabled={!isAudioAvailable} className="px-4 py-2 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 transition-transform transform hover:scale-105 disabled:opacity-50">
             Speed up
           </button>
-          <button onClick={slowDownAudio} disabled={!isAudioAvailable} className="px-4 py-2 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 transition-transform transform hover:scale-105 disabled:opacity-50">
+          <button onClick={slowDownAudio} disabled={!isAudioAvailable} className="px-4 py-2 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-transform transform hover:scale-105 disabled:opacity-50">
             Slow Down
           </button>
         </div>

@@ -4,6 +4,7 @@ import fs from 'fs';
 const path = require('path');
 import Tesseract from 'tesseract.js';
 import {franc} from 'franc'
+import pdftocairoWrapper from './pdftocairo-wrapper';
 
 const iso6393To1 = {
   aar: 'aa',
@@ -222,10 +223,36 @@ export async function POST(req, res) {
       out_dir: outputDir,
       out_prefix: path.basename(tempFilePath, path.extname(tempFilePath)),
       page: null,
-      
     }
-    await pdf.convert(tempFilePath, opts);
-    console.log('PDF converted to images');
+    
+    const convertPDF = (inputPath, options) => {
+      return new Promise((resolve, reject) => {
+        const args = [
+          "-jpeg",
+          "-scale-to",
+          "1024",
+          inputPath,
+          path.join(options.out_dir, options.out_prefix),
+        ];
+        pdftocairoWrapper(args, (error, stdout) => {
+          if (error) {
+            return reject(error);
+          }
+          resolve(stdout);
+        });
+      });
+    };
+
+    try {
+      await convertPDF(tempFilePath, opts);
+      console.log("PDF converted to images");
+    } catch (conversionError) {
+      console.error("Error during PDF conversion:", conversionError);
+      return NextResponse.json(
+        { error: "PDF conversion error" },
+        { status: 500 }
+      );
+    }
 
     let fullText = '';
     const imageFiles = fs.readdirSync(outputDir).filter((file) => file.endsWith('.jpg'));

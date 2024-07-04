@@ -9,7 +9,9 @@ const nextConfig = {
         userID: process.env.userID,
         ulcaApiKey: process.env.ulcaApiKey,
         pipelineId: process.env.pipelineId
-    }
+    },
+    output : "standalone",
+    staticPageGenerationTimeout: 1000,
 }
 
 module.exports = nextConfig
