@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';
-const pdf = require('pdf-poppler');
+// const pdf = require('pdf-poppler');
 import fs from 'fs';
 const path = require('path');
 import Tesseract from 'tesseract.js';
@@ -225,7 +225,28 @@ export async function POST(req, res) {
       page: null,
     }
     
-    const convertPDF = (inputPath, options) => {
+    const convertPDF = async (inputPath, options) => {
+      let stdout;
+      try {
+        if (process.platform === 'win32' || process.platform === 'darwin') {
+          // Use pdf-poppler for Windows and macOS
+          stdout = await convertPDFWithPoppler(inputPath, options);
+        } else if (process.platform === 'linux') {
+          // Use poppler-utils for Linux
+          stdout = await convertPDFWithPopplerUtils(inputPath, options);
+        } else {
+          throw new Error('Unsupported platform');
+        }
+        console.log("PDF converted to images");
+        return stdout;
+      } catch (conversionError) {
+        console.error("Error during PDF conversion:", conversionError);
+        throw conversionError;
+      }
+    };
+
+    // Function to convert PDF using pdf-poppler (Windows/macOS)
+  const convertPDFWithPoppler = (inputPath, options) => {
       return new Promise((resolve, reject) => {
         const args = [
           "-jpeg",
@@ -236,13 +257,32 @@ export async function POST(req, res) {
         ];
         pdftocairoWrapper(args, (error, stdout) => {
           if (error) {
-            return reject(error);
+            reject(error);
+          } else {
+            resolve(stdout);
           }
-          resolve(stdout);
         });
       });
     };
-
+  const convertPDFWithPopplerUtils = (inputPath, options) => {
+      return new Promise((resolve, reject) => {
+        const args = [
+          "-jpeg",
+          "-r",
+          "300", // Adjust as needed for resolution
+          inputPath,
+          path.join(options.out_dir, options.out_prefix),
+        ];
+        pdftocairoWrapper(args, (error, stdout) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(stdout);
+          }
+        });
+      });
+    };
+    
     try {
       await convertPDF(tempFilePath, opts);
       console.log("PDF converted to images");
@@ -252,6 +292,7 @@ export async function POST(req, res) {
         { error: "PDF conversion error" },
         { status: 500 }
       );
+
     }
 
     let fullText = '';

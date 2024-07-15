@@ -2,7 +2,7 @@
 
 
 import React, { useState } from "react";
-
+import Image from "next/image";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,11 +41,20 @@ const SideNav = () => {
         <div className="md:w-60 bg-white h-screen flex-1 fixed border-r border-zinc-200 hidden md:flex">
             <div className="flex flex-col space-y-6 w-full items-center">
                 <div className="flex items-center justify-center w-full py-4">
-                    <img
-                        src="logo.png"
+                    <Image
+                        src="/logo.png"
                         alt="Logo"
-                        className="w-29 h-230"
+                       
+                        width = {230}
+                        height = {240}
                     />
+                    {/* <Image
+                  className="rounded-full"
+                  src="/assets/home/laptop.png"
+                  alt="Loading"
+                  width={126}
+                  height={126}
+                /> */}
                 </div>
                 <div className="flex flex-col space-y-1 w-full">
                     {SIDENAV_ITEMS.map((item, idx) => {

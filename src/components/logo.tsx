@@ -8,7 +8,7 @@ const IS_DEMO_THEME = process.env.NEXT_PUBLIC_THEME === "trupeer_demo";
 const Logo = () => {
   return IS_DEMO_THEME ? (
     <img
-      src="/assets/common/trupeer-logo-hd.png"
+      src="C:\Users\ARNAV AGARWAL\OneDrive - Indian Institute of Technology Bombay\Desktop\testingbhashini\public\images\assets\common\trupeer-logo-hd.png"
       alt="Logo"
       className="w-24 h-24"
     />
