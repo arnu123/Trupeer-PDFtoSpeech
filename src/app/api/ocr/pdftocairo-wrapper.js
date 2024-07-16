@@ -5,13 +5,9 @@ const os = require("os");
 let pdftocairoPath;
 
 if (os.platform() === 'win32') {
-  pdftocairoPath = process.env.PDFTOCAIRO_PATH|| path.normalize("C:/poppler/poppler-0.68.0/bin/pdftocairo.exe");
+  pdftocairoPath = path.normalize("C:/poppler/poppler-0.68.0/bin/pdftocairo.exe");
 } else if (os.platform() === 'darwin') {
-  pdftocairoPath = process.env.PDFTOCAIRO_PATH || path.normalize("/opt/homebrew/bin/pdftocairo");
-} else if (os.platform() === 'linux') {
-  pdftocairoPath = process.env.PDFTOCAIRO_PATH || '/usr/bin/pdftocairo'; // Example path for Linux
-} else {
-  throw new Error('Unsupported platform');
+  pdftocairoPath = path.normalize("/opt/homebrew/bin/pdftocairo");
 }
 
 module.exports = (args, callback) => {
