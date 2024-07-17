@@ -1,8 +1,8 @@
-# Bhashini Project
+# Trupeer - PDFtoSpeech
 
 ## Getting Started
 
-Before you begin, ensure you have [Node.js](https://nodejs.org/) and [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
+Before you begin, ensure you have Node.js and Docker Desktop(optional) installed.
 
 ## Installation Steps
 
@@ -108,4 +108,3 @@ Before you begin, ensure you have [Node.js](https://nodejs.org/) and [Docker Des
 ## Accessing the Application
 
 After starting the server, open [http://localhost:3000/intro](http://localhost:3000/intro) in your browser to view the application.
-
