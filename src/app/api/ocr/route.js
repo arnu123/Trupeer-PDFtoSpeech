@@ -5,7 +5,9 @@ const path = require('path');
 import Tesseract from 'tesseract.js';
 import {franc} from 'franc'
 import pdftocairoWrapper from './pdftocairo-wrapper';
+const {spawn} = require('child_process');
 
+const os = require("os");
 const iso6393To1 = {
   aar: 'aa',
   abk: 'ab',
@@ -228,11 +230,12 @@ export async function POST(req, res) {
     const convertPDF = async (inputPath, options) => {
       let stdout;
       try {
-        if (process.platform === 'win32' || process.platform === 'darwin') {
+        if (os.platform()=== 'win32' || process.platform === 'darwin') {
           // Use pdf-poppler for Windows and macOS
           stdout = await convertPDFWithPoppler(inputPath, options);
-        } else if (process.platform === 'linux') {
+        } else if (os.platform()=== 'linux') {
           // Use poppler-utils for Linux
+          
           stdout = await convertPDFWithPopplerUtils(inputPath, options);
         } else {
           throw new Error('Unsupported platform');
@@ -265,6 +268,7 @@ export async function POST(req, res) {
       });
     };
   const convertPDFWithPopplerUtils = (inputPath, options) => {
+    console.log(inputPath)
       return new Promise((resolve, reject) => {
         const args = [
           "-jpeg",
@@ -273,13 +277,31 @@ export async function POST(req, res) {
           inputPath,
           path.join(options.out_dir, options.out_prefix),
         ];
-        pdftocairoWrapper(args, (error, stdout) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(stdout);
-          }
-        });
+        const pdftocairoProcess = spawn('pdftocairo', args);
+        let stdout = '';
+        let stderr = '';
+         pdftocairoProcess.stdout.on('data', (data) => {
+          stdout += data.toString();
+      });
+
+    // Capture the standard error
+    pdftocairoProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    // Handle process completion
+    pdftocairoProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve(stdout);
+      } else {
+        reject(new Error(`pdftocairo process exited with code ${code}: ${stderr}`));
+      }
+    });
+
+    // Handle process errors
+    pdftocairoProcess.on('error', (err) => {
+      reject(err);
+    });
       });
     };
     
