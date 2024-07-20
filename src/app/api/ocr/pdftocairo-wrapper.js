@@ -5,8 +5,8 @@ const os = require("os");
 let pdftocairoPath;
 
 if (os.platform() === 'win32') {
-  console.log(path.join(__dirname,'poppler-0.68.0','bin','pdftocairo.exe'))
-  pdftocairoPath = path.join(process.cwd(),'poppler-0.68.0','bin','pdftocairo.exe');
+  console.log(path.join(process.cwd(),'poppler-bin','bin','pdftocairo.exe'))
+  pdftocairoPath = path.join(process.cwd(),'poppler-bin','bin','pdftocairo.exe');
   console.log(`pdftocairoPath: ${pdftocairoPath}`);
 } else if (os.platform() === 'darwin') {
   pdftocairoPath = path.normalize("/opt/homebrew/bin/pdftocairo");
