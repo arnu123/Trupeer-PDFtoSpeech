@@ -203,7 +203,7 @@ export async function POST(req, res) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
     
-    const tempDir = path.join(process.cwd(), 'tmp');
+    const tempDir = path.join(os.tmpdir(), 'tmp');
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir);
     }
